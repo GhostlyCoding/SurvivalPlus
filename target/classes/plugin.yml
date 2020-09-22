@@ -1,0 +1,11 @@
+main: ml.chriscommunity.survivalplus.main.Main
+name: "SurvivalPlus"
+author: GhostlyGames41
+version: 1.0
+depend: [Vault]
+
+commands:
+   coin:
+      usage: /<command>
+   rtp:
+      usage: /<command>
