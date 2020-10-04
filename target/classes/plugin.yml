@@ -9,3 +9,8 @@ commands:
       usage: /<command>
    rtp:
       usage: /<command>
+   shop:
+      usage: /<command>
+   customize:
+   survivalplus:
+      aliases: [sp]
