@@ -3,6 +3,10 @@
   <groupId>SurvivalPlus</groupId>
   <artifactId>SurvivalPlus</artifactId>
   <version>0.0.1-SNAPSHOT</version>
+  <scm>
+  	<connection>scm:git:http://github.com/Ghostly-Coding/SurvivalPlus</connection>
+  	
+  </scm>
   <build>
     <sourceDirectory>src</sourceDirectory>
     <resources>
@@ -30,6 +34,16 @@
 			<outputDirectory>F:\Spigot 1.8.8 server\plugins\</outputDirectory>
 		</configuration>
 	  </plugin>
+	  <plugin>
+	  	<groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-scm-plugin</artifactId>
+        <version>1.11.2</version>
+        <configuration>
+        	<connectionType>connection</connectionType>
+        	
+        </configuration>
+        
+      </plugin>
     </plugins>
   </build>
 	<repositories>

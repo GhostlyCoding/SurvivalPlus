@@ -307,8 +307,13 @@ public class Main extends JavaPlugin implements Listener {
 		setTo1.setItemMeta(meta);
 		inv.setItem(20, setTo1);
 		ItemStack purchase = new ItemStack(Material.CHEST);
+		String[] loreTokens = item.getItemMeta().getLore().get(0).split(" ");
+		int price = Integer.parseInt(loreTokens[2]);
+		ArrayList<String> lore = new ArrayList<>();
+		lore.add("Total Price: " + price);
 		meta = purchase.getItemMeta();
 		meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&a&lPurchase"));
+		meta.setLore(lore);
 		purchase.setItemMeta(meta);
 		inv.setItem(39, purchase);
 		ItemStack back = new ItemStack(Material.BARRIER);
@@ -407,11 +412,25 @@ public class Main extends JavaPlugin implements Listener {
 			if(event.getSlot() == 41) {
 				player.closeInventory();
 			} else if(event.getSlot() == 39) {
-				if(econ.getBalance(player) >= price * item.getAmount()) {
-					player.getInventory().addItem(new ItemStack(item.getType(), item.getAmount()));
-					player.closeInventory();
+				if(player.getInventory().firstEmpty() != -1) {
+					EconomyResponse r = econ.withdrawPlayer(player, price * item.getAmount());
+					if(r.transactionSuccess()) {
+						player.getInventory().addItem(new ItemStack(item.getType(), item.getAmount()));
+						player.closeInventory();
+						player.sendMessage(ChatColor.GREEN + "You purchased " + item.getAmount() + " " + item.getType().toString());
+					} else {
+						player.closeInventory();
+						player.sendMessage(ChatColor.RED + "You do not have enough money.");
+					}
+				} else {
+					player.sendMessage(ChatColor.RED + "You do not have enough space in your inventory.");
 				}
 			}
+			ArrayList<String> lore = new ArrayList<>();
+			lore.add("Total Price: " + price * inv.getItem(22).getAmount());
+			ItemMeta meta = inv.getItem(39).getItemMeta();
+			meta.setLore(lore);
+			inv.getItem(39).setItemMeta(meta);
 		}
 		if(inv.getName() == "Shop Customizer") {
 			event.setCancelled(true);
