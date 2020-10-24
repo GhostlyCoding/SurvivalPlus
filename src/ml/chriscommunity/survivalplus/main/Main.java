@@ -21,7 +21,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
@@ -34,56 +33,35 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 
-import net.milkbowl.vault.chat.Chat;
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
-import net.milkbowl.vault.permission.Permission;
+import ml.chriscommunity.economy.Economy;
 
 public class Main extends JavaPlugin implements Listener {
 	DataManager data = new DataManager(this);
 	
 	private static final Logger log = Logger.getLogger("Minecraft");
 	private static Economy econ = null;
-	private static Permission perms = null;
-	private static Chat chat = null;
 	
 
 	@Override
 	public void onEnable() {
 		if(!setupEconomy()) {
-			log.severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
+			log.severe(String.format("[%s] - Disabled due to no EconomyPlus dependency found!", getDescription().getName()));
 			getServer().getPluginManager().disablePlugin(this);
 		}
-		setupPermissions();
-		setupChat();
 		data.saveConfig();
 
 		getServer().getPluginManager().registerEvents(this, this);
 	}
 	
 	private boolean setupEconomy() {
-		if(getServer().getPluginManager().getPlugin("Vault") == null) {
+		if(getServer().getPluginManager().getPlugin("EconomyPlus") == null) {
 			return false;
 		}
-		RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-		if(rsp == null) {
+		if (econ.initEcon() != 0) {
 			return false;
 		}
-		econ = rsp.getProvider();
-				
+		econ = new Economy();
 		return econ != null;
-	}
-	
-	private boolean setupChat() {
-		RegisteredServiceProvider<Chat> rsp = getServer().getServicesManager().getRegistration(Chat.class);
-		chat = rsp.getProvider();
-		return chat != null;
-	}
-	
-	private boolean setupPermissions() {
-		RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager().getRegistration(Permission.class);
-		perms = rsp.getProvider();
-		return chat != null;
 	}
 
 	@Override
@@ -123,11 +101,10 @@ public class Main extends JavaPlugin implements Listener {
 							player.sendMessage(ChatColor.RED + "Amount cannot be less than 0.");
 							return true;
 						}
-						EconomyResponse r = econ.depositPlayer(Bukkit.getPlayer(args[1]), Double.parseDouble(args[2]));
-						if(r.transactionSuccess()) {
-							Bukkit.getPlayer(args[1]).sendMessage(String.format("You were given %s and now have %f", econ.format(r.amount), r.balance));
-							data.getConfig().set(Bukkit.getPlayer(args[1]).getUniqueId() + ".balance", r.balance);
-							data.saveConfig();
+						if(econ.depositPlayer(Bukkit.getPlayer(args[1]), Double.parseDouble(args[2])) == 0) {
+							Bukkit.getPlayer(args[1]).sendMessage(String.format("You were given %s and now have %f", Double.parseDouble(args[2]), econ.getBalance(Bukkit.getPlayer(args[1]))));
+							//data.getConfig().set(Bukkit.getPlayer(args[1]).getUniqueId() + ".balance", r.balance);
+							//data.saveConfig();
 						}
 						
 						return true;
@@ -136,11 +113,10 @@ public class Main extends JavaPlugin implements Listener {
 							player.sendMessage(ChatColor.RED + "Amount cannot be less than 0.");
 							return true;
 						}
-						EconomyResponse r = econ.withdrawPlayer(Bukkit.getPlayer(args[1]), Double.parseDouble(args[2]));
-						if(r.transactionSuccess()) {
-							Bukkit.getPlayer(args[1]).sendMessage(String.format("%s was taken from you and now have %f", econ.format(Math.abs(r.amount)), r.balance));
-							data.getConfig().set(Bukkit.getPlayer(args[1]).getUniqueId() + ".balance", r.balance);
-							data.saveConfig();
+						if(econ.withdrawPlayer(Bukkit.getPlayer(args[1]), Double.parseDouble(args[2])) == 0) {
+							Bukkit.getPlayer(args[1]).sendMessage(String.format("%s was taken from you and now have %f", Double.parseDouble(args[2]), econ.getBalance(Bukkit.getPlayer(args[1]))));
+							//data.getConfig().set(Bukkit.getPlayer(args[1]).getUniqueId() + ".balance", r.balance);
+							//data.saveConfig();
 						}
 						
 						return true;
@@ -192,7 +168,7 @@ public class Main extends JavaPlugin implements Listener {
 		Inventory inv = null;
 		inv = Bukkit.createInventory(player, 54, "Shop Customizer");
 		
-		ItemStack border = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)15);
+		ItemStack border = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
 		ItemMeta meta = border.getItemMeta();
 		meta = border.getItemMeta();
 		meta.setDisplayName(" ");
@@ -254,21 +230,94 @@ public class Main extends JavaPlugin implements Listener {
 			meta.setDisplayName(ChatColor.RESET + "Ores/Metals");
 			ores.setItemMeta(meta);
 			inv.setItem(13, ores);
-			ItemStack spawners = new ItemStack(Material.MOB_SPAWNER);
+			ItemStack spawners = new ItemStack(Material.SPAWNER);
 			meta = spawners.getItemMeta();
 			meta.setDisplayName(ChatColor.RESET + "Spawners");
 			spawners.setItemMeta(meta);
 			inv.setItem(14, spawners);
 		} else if(tab == 1) {
 			inv = Bukkit.createInventory(player, 54, "Building");
+			ItemStack border = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+			ItemMeta meta = border.getItemMeta();
+			meta = border.getItemMeta();
+			meta.setDisplayName(" ");
+			border.setItemMeta(meta);
+			for(int i = 0; i < 54; i++) {
+				if(i < 9 || i % 9 == 0 || i % 9 == 8 || i > 43) {
+					inv.setItem(i, border);
+				}
+			}
 			ItemStack back = new ItemStack(Material.BARRIER);
-			ItemMeta meta = back.getItemMeta();
+			meta = back.getItemMeta();
 			meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&c&lBack"));
 			back.setItemMeta(meta);
 			inv.setItem(49, back);
+			// Line 1	slot			item id					price
+			inv.setItem(10, getShopItem(Material.DIRT, 			1, 0.5f, 1));
+			inv.setItem(11, getShopItem(Material.GRASS, 		1, 0.75f, 1));
+			inv.setItem(12, getShopItem(Material.STONE, 		2, 1, 1));
+			inv.setItem(13, getShopItem(Material.COBBLESTONE, 	1, 0.75f, 1));
+			inv.setItem(14, getShopItem(Material.STONE_BRICKS, 	8, 4, 1));
+			inv.setItem(15, getShopItem(Material.GLOWSTONE, 	10, 7, 1));
+			inv.setItem(16, getShopItem(Material.OBSIDIAN, 		40, 30, 1));
+			// Line 2
+			inv.setItem(19, getShopItem(Material.OAK_LOG, 		2, 1, 1));
+			inv.setItem(20, getShopItem(Material.OAK_LEAVES, 	1, 0.75f, 1));
+			inv.setItem(21, getShopItem(Material.QUARTZ_BLOCK, 	4, 3, 1));
+			inv.setItem(22, getShopItem(Material.NETHERRACK, 	1, 0.25f, 1));
+			inv.setItem(23, getShopItem(Material.GLASS, 		1.5f, 1.25f, 1));
+			inv.setItem(24, getShopItem(Material.SAND, 			1, 0.5f, 1));
+			inv.setItem(25, getShopItem(Material.GRAVEL, 		1, 0.5f, 1));
+			// Line 3
+			inv.setItem(28, getShopItem(Material.WHITE_WOOL, 	2, 1, 1));
+			inv.setItem(29, getShopItem(Material.ICE, 			5, 4, 1));
+		} else if(tab == 2) {
+			inv = Bukkit.createInventory(player, 54, "Ores/Metals");
+			ItemStack border = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+			ItemMeta meta = border.getItemMeta();
+			meta = border.getItemMeta();
+			meta.setDisplayName(" ");
+			border.setItemMeta(meta);
+			for(int i = 0; i < 54; i++) {
+				if(i < 9 || i % 9 == 0 || i % 9 == 8 || i > 43) {
+					inv.setItem(i, border);
+				}
+			}
 			
-			inv.setItem(10, getShopItem(Material.DIRT, 10, 1));
+			inv.setItem(10, getShopItem(Material.GOLD_INGOT, 5, 4, 1));
+			inv.setItem(19, getShopItem(Material.GOLD_BLOCK, 45, 36, 1));
+			inv.setItem(28, getShopItem(Material.GOLD_ORE, 3, 2, 1));
+			inv.setItem(11, getShopItem(Material.DIAMOND, 10, 8, 1));
+			inv.setItem(20, getShopItem(Material.DIAMOND_BLOCK, 90, 72, 1));
+			inv.setItem(29, getShopItem(Material.DIAMOND_ORE, 9, 7, 1));
+			inv.setItem(12, getShopItem(Material.EMERALD, 8, 6, 1));
+			inv.setItem(21, getShopItem(Material.EMERALD_BLOCK, 72, 54, 1));
+			inv.setItem(30, getShopItem(Material.EMERALD_ORE, 7, 5, 1));
+			inv.setItem(13, getShopItem(Material.COAL, 3, 2, 1));
+			inv.setItem(22, getShopItem(Material.COAL_BLOCK, 27, 18, 1));
+			inv.setItem(31, getShopItem(Material.COAL_ORE, 2, 1.5f, 1));
+			inv.setItem(14, getShopItem(Material.REDSTONE, 3, 2, 1));
+			inv.setItem(23, getShopItem(Material.REDSTONE_BLOCK, 27, 18, 1));
+			inv.setItem(32, getShopItem(Material.REDSTONE_ORE, 2, 1.5f, 1));
+			ItemStack lapis = new ItemStack(Material.LAPIS_LAZULI);
+			meta = lapis.getItemMeta();
+			ArrayList<String> lore = new ArrayList<>();
+			lore.add("Buy Price: " + 3 + " coins");
+			lore.add("Sell Price: " + 2.75 + " coins");
+			meta.setLore(lore);
+			lapis.setItemMeta(meta);
+			inv.setItem(15, lapis);
+			inv.setItem(24, getShopItem(Material.LAPIS_BLOCK, 27, 24.75f, 1));
+			inv.setItem(33, getShopItem(Material.LAPIS_ORE, 2, 1.75f, 1));
+			inv.setItem(16, getShopItem(Material.IRON_INGOT, 4, 3.5f, 1));
+			inv.setItem(25, getShopItem(Material.IRON_BLOCK, 36, 31.5f, 1));
+			inv.setItem(34, getShopItem(Material.IRON_ORE, 3, 2.5f, 1));
 			
+			ItemStack back = new ItemStack(Material.BARRIER);
+			meta = back.getItemMeta();
+			meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&c&lBack"));
+			back.setItemMeta(meta);
+			inv.setItem(49, back);
 		}
 		return inv;
 	}
@@ -276,9 +325,9 @@ public class Main extends JavaPlugin implements Listener {
 	Inventory getBuyMenu(Player player, ItemStack item) {
 		Inventory inv = Bukkit.createInventory(player, 54, "Purchase Item");
 		inv.setItem(22, item);
-		ItemStack addItem = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)5);
-		ItemStack addItems10 = new ItemStack(Material.STAINED_GLASS_PANE, 10, (short)5);
-		ItemStack addItems64 = new ItemStack(Material.STAINED_GLASS_PANE, 64, (short)5);
+		ItemStack addItem = new ItemStack(Material.GREEN_STAINED_GLASS_PANE);
+		ItemStack addItems10 = new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 10);
+		ItemStack addItems64 = new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 64);
 		ItemMeta meta = addItem.getItemMeta();
 		meta.setDisplayName(ChatColor.GREEN + "Add 1 Item");
 		addItem.setItemMeta(meta);
@@ -291,9 +340,9 @@ public class Main extends JavaPlugin implements Listener {
 		meta.setDisplayName(ChatColor.GREEN + "Set to 64 Items");
 		addItems64.setItemMeta(meta);
 		inv.setItem(26, addItems64);
-		ItemStack removeItems32 = new ItemStack(Material.STAINED_GLASS_PANE, 32, (short)14);
-		ItemStack removeItems10 = new ItemStack(Material.STAINED_GLASS_PANE, 10, (short)14);
-		ItemStack setTo1 = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)14);
+		ItemStack removeItems32 = new ItemStack(Material.RED_STAINED_GLASS_PANE, 32);
+		ItemStack removeItems10 = new ItemStack(Material.RED_STAINED_GLASS_PANE, 10);
+		ItemStack setTo1 = new ItemStack(Material.RED_STAINED_GLASS_PANE, 1);
 		meta = removeItems32.getItemMeta();
 		meta.setDisplayName(ChatColor.RED + "Remove 32 Items");
 		removeItems32.setItemMeta(meta);
@@ -303,12 +352,12 @@ public class Main extends JavaPlugin implements Listener {
 		removeItems10.setItemMeta(meta);
 		inv.setItem(19, removeItems10);
 		meta = setTo1.getItemMeta();
-		meta.setDisplayName(ChatColor.RED + "Set to 1 Item");
+		meta.setDisplayName(ChatColor.RED + "Remove 1 Item");
 		setTo1.setItemMeta(meta);
 		inv.setItem(20, setTo1);
 		ItemStack purchase = new ItemStack(Material.CHEST);
 		String[] loreTokens = item.getItemMeta().getLore().get(0).split(" ");
-		int price = Integer.parseInt(loreTokens[2]);
+		double price = Double.valueOf(loreTokens[2]);
 		ArrayList<String> lore = new ArrayList<>();
 		lore.add("Total Price: " + price);
 		meta = purchase.getItemMeta();
@@ -321,15 +370,150 @@ public class Main extends JavaPlugin implements Listener {
 		meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&c&lCancel"));
 		back.setItemMeta(meta);
 		inv.setItem(41, back);
+		ItemStack purchaseStacks = new ItemStack(Material.CHEST_MINECART);
+		meta = purchaseStacks.getItemMeta();
+		meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&a&lPurchase Multiple Stacks"));
+		purchaseStacks.setItemMeta(meta);
+		inv.setItem(49, purchaseStacks);
 		
 		return inv;
 	}
 	
-	ItemStack getShopItem(Material material, int price, int amount) {
+	Inventory getSellMenu(Player player, ItemStack item) {
+		Inventory inv = Bukkit.createInventory(player, 54, "Sell Item");
+		inv.setItem(22, item);
+		ItemStack addItem = new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 1);
+		ItemStack addItems10 = new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 10);
+		ItemStack addItems64 = new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 64);
+		ItemMeta meta = addItem.getItemMeta();
+		meta.setDisplayName(ChatColor.GREEN + "Add 1 Item");
+		addItem.setItemMeta(meta);
+		inv.setItem(24, addItem);
+		meta = addItems10.getItemMeta();
+		meta.setDisplayName(ChatColor.GREEN + "Add 10 Items");
+		addItems10.setItemMeta(meta);
+		inv.setItem(25, addItems10);
+		meta = addItems64.getItemMeta();
+		meta.setDisplayName(ChatColor.GREEN + "Set to 64 Items");
+		addItems64.setItemMeta(meta);
+		inv.setItem(26, addItems64);
+		ItemStack removeItems32 = new ItemStack(Material.RED_STAINED_GLASS_PANE, 32);
+		ItemStack removeItems10 = new ItemStack(Material.RED_STAINED_GLASS_PANE, 10);
+		ItemStack setTo1 = new ItemStack(Material.RED_STAINED_GLASS_PANE, 1);
+		meta = removeItems32.getItemMeta();
+		meta.setDisplayName(ChatColor.RED + "Remove 32 Items");
+		removeItems32.setItemMeta(meta);
+		inv.setItem(18, removeItems32);
+		meta = removeItems10.getItemMeta();
+		meta.setDisplayName(ChatColor.RED + "Remove 10 Items");
+		removeItems10.setItemMeta(meta);
+		inv.setItem(19, removeItems10);
+		meta = setTo1.getItemMeta();
+		meta.setDisplayName(ChatColor.RED + "Remove 1 Item");
+		setTo1.setItemMeta(meta);
+		inv.setItem(20, setTo1);
+		ItemStack purchase = new ItemStack(Material.CHEST);
+		String[] loreTokens = item.getItemMeta().getLore().get(1).split(" ");
+		double price = Double.valueOf(loreTokens[2]);
+		ArrayList<String> lore = new ArrayList<>();
+		lore.add("Total Price: " + price);
+		meta = purchase.getItemMeta();
+		meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&a&lSell"));
+		meta.setLore(lore);
+		purchase.setItemMeta(meta);
+		inv.setItem(39, purchase);
+		ItemStack back = new ItemStack(Material.BARRIER);
+		meta = back.getItemMeta();
+		meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&c&lCancel"));
+		back.setItemMeta(meta);
+		inv.setItem(41, back);
+		ItemStack purchaseStacks = new ItemStack(Material.CHEST_MINECART);
+		meta = purchaseStacks.getItemMeta();
+		meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&a&lSell Multiple Stacks"));
+		purchaseStacks.setItemMeta(meta);
+		inv.setItem(49, purchaseStacks);
+		
+		return inv;
+	}
+	
+	Inventory getMultipleStackBuy(Player player, ItemStack item) {
+		String[] loreTokens = item.getItemMeta().getLore().get(0).split(" ");
+		double price = Double.valueOf(loreTokens[2]);
+		ArrayList<String> lore = new ArrayList<>();
+		Inventory inv = Bukkit.createInventory(player, 27, "Purchase Multiple Stacks");
+		inv.setItem(4, item);
+		
+		ItemStack purchase1 = new ItemStack(Material.CHEST_MINECART);
+		ItemMeta meta = purchase1.getItemMeta();
+		lore.add("Total Price: " + price * 64 + " coins");
+		meta.setLore(lore);
+		lore.clear();
+		meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&a&lPurchase 1 Stack"));
+		purchase1.setItemMeta(meta);
+		inv.setItem(10, purchase1);
+		ItemStack purchase2 = new ItemStack(Material.CHEST_MINECART, 2);
+		meta = purchase2.getItemMeta();
+		lore.add("Total Price: " + price * 64 * 2 + " coins");
+		meta.setLore(lore);
+		lore.clear();
+		meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&a&lPurchase 2 Stacks"));
+		purchase2.setItemMeta(meta);
+		inv.setItem(11, purchase2);
+		ItemStack purchase3 = new ItemStack(Material.CHEST_MINECART, 3);
+		meta = purchase3.getItemMeta();
+		lore.add("Total Price: " + price * 64 * 3 + " coins");
+		meta.setLore(lore);
+		lore.clear();
+		meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&a&lPurchase 3 Stacks"));
+		purchase3.setItemMeta(meta);
+		inv.setItem(12, purchase3);
+		ItemStack purchase4 = new ItemStack(Material.CHEST_MINECART, 4);
+		meta = purchase4.getItemMeta();
+		lore.add("Total Price: " + price * 64 * 4+ " coins");
+		meta.setLore(lore);
+		lore.clear();
+		meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&a&lPurchase 4 Stacks"));
+		purchase4.setItemMeta(meta);
+		inv.setItem(13, purchase4);
+		ItemStack purchase5 = new ItemStack(Material.CHEST_MINECART, 5);
+		meta = purchase5.getItemMeta();
+		lore.add("Total Price: " + price * 64 * 5 + " coins");
+		meta.setLore(lore);
+		lore.clear();
+		meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&a&lPurchase 5 Stacks"));
+		purchase5.setItemMeta(meta);
+		inv.setItem(14, purchase5);
+		ItemStack purchase6 = new ItemStack(Material.CHEST_MINECART, 6);
+		meta = purchase6.getItemMeta();
+		lore.add("Total Price: " + price * 64 * 6 + " coins");
+		meta.setLore(lore);
+		lore.clear();
+		meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&a&lPurchase 6 Stacks"));
+		purchase6.setItemMeta(meta);
+		inv.setItem(15, purchase6);
+		ItemStack purchase7 = new ItemStack(Material.CHEST_MINECART, 7);
+		meta = purchase7.getItemMeta();
+		lore.add("Total Price: " + price * 64 * 7 + " coins");
+		meta.setLore(lore);
+		lore.clear();
+		meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&a&lPurchase 7 Stacks"));
+		purchase7.setItemMeta(meta);
+		inv.setItem(16, purchase7);
+		ItemStack back = new ItemStack(Material.BARRIER);
+		meta = back.getItemMeta();
+		meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&c&lCancel"));
+		back.setItemMeta(meta);
+		inv.setItem(22, back);
+		
+		return inv;
+	}
+	
+	ItemStack getShopItem(Material material, double price, double sellPrice, int amount) {
 		ItemStack item = new ItemStack(material, amount);
 		ItemMeta meta = item.getItemMeta();
 		ArrayList<String> lore = new ArrayList<>();
 		lore.add("Buy Price: " + price + " coins");
+		lore.add("Sell Price: " + sellPrice + " coins");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
 		
@@ -348,64 +532,87 @@ public class Main extends JavaPlugin implements Listener {
 		}
 		byte[] encodedData = Base64.encodeBase64(String.format("{textures:{SKIN:{url:\"%s\"}}}", url).getBytes());
 		propertyMap.put("textures", new Property("textures", new String(encodedData)));
-		ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
+		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		ItemMeta headMeta = head.getItemMeta();
 		Class<?> headMetaClass = headMeta.getClass();
 		Reflections.getField(headMetaClass, "profile", GameProfile.class).set(headMeta, profile);
 		headMeta.setDisplayName("Coin");
 		head.setItemMeta(headMeta);
-
 		return head;
 	}
-	
 	@EventHandler
 	void onInventoryClick(InventoryClickEvent event) {
 		Inventory inv = event.getInventory();
 		Player player = (Player) event.getWhoClicked();
-		if(inv.getName() == "Shop") {
+		if(event.getView().getTitle() == "Shop") {
 			event.setCancelled(true);
 			if(event.getSlot() == 12) {
 				player.closeInventory();
 				player.openInventory(getShop(player, 1));
+			} else if(event.getSlot() == 13) {
+				player.closeInventory();
+				player.openInventory(getShop(player, 2));
 			}
 		}
-		if(inv.getName() == "Building") {
+		if(event.getView().getTitle() == "Building") {
 			event.setCancelled(true);
 			if(event.getSlot() == 49) {
 				player.closeInventory();
 				player.openInventory(getShop(player, 0));
 			}
-			if(event.getSlot() >= 10 && event.getSlot() <= 10) {
+			if(event.isLeftClick() && event.getSlot() >= 10 && event.getSlot() <= 29 && event.getSlot() % 9 != 0 && event.getSlot() % 9 != 8) {
 				player.closeInventory();
 				player.openInventory(getBuyMenu(player, event.getCurrentItem()));
 			}
+			if(event.isRightClick() && event.getSlot() >= 10 && event.getSlot() <= 29 && event.getSlot() % 9 != 0 && event.getSlot() % 9 != 8) {
+				player.closeInventory();
+				player.openInventory(getSellMenu(player, event.getCurrentItem()));
+			}
+
 		}
-		if(inv.getName() == "Purchase Item") {
+		if(event.getView().getTitle() == "Ores/Metals") {
+			event.setCancelled(true);
+			if(event.getSlot() == 49) {
+				player.closeInventory();
+				player.openInventory(getShop(player, 0));
+			}
+			if(event.isLeftClick() && event.getSlot() >= 10 && event.getSlot() <= 34 && event.getSlot() % 9 != 0 && event.getSlot() % 9 != 8) {
+				player.closeInventory();
+				player.openInventory(getBuyMenu(player, event.getCurrentItem()));
+			}
+			if(event.isRightClick() && event.getSlot() >= 10 && event.getSlot() <= 34 && event.getSlot() % 9 != 0 && event.getSlot() % 9 != 8) {
+				player.closeInventory();
+				player.openInventory(getSellMenu(player, event.getCurrentItem()));
+			}
+		}
+		if(event.getView().getTitle() == "Purchase Item") {
 			event.setCancelled(true);
 			ItemStack item = inv.getItem(22);
-			String[] loreTokens = item.getItemMeta().getLore().get(0).split(" ");
-			int price = Integer.parseInt(loreTokens[2]);
+			String[] buyTokens = item.getItemMeta().getLore().get(0).split(" ");
+			double price = Double.valueOf(buyTokens[2]);
+			String[] sellTokens = item.getItemMeta().getLore().get(1).split(" ");
+			double sellPrice = Double.valueOf(sellTokens[2]);
 			if(event.getSlot() == 24) {
-				inv.setItem(22, getShopItem(item.getType(), price, item.getAmount() + 1));
+				inv.setItem(22, getShopItem(item.getType(), price, sellPrice, item.getAmount() + 1));
 			} else if(event.getSlot() == 25) {
-				inv.setItem(22, getShopItem(item.getType(), price, item.getAmount() + 10));
+				inv.setItem(22, getShopItem(item.getType(), price, sellPrice, item.getAmount() + 10));
 			} else if(event.getSlot() == 26) {
-				inv.setItem(22, getShopItem(item.getType(), price, 64));
+				inv.setItem(22, getShopItem(item.getType(), price, sellPrice, 64));
 			}
 			if(item.getAmount() > 1) {
 				if(event.getSlot() == 20) {
-					inv.setItem(22, getShopItem(item.getType(), price, 1));
+					inv.setItem(22, getShopItem(item.getType(), price, sellPrice, item.getAmount() - 1));
 				} else if(event.getSlot() == 19) {
 					if(item.getAmount() > 10) {
-						inv.setItem(22, getShopItem(item.getType(), price, item.getAmount() - 10));
+						inv.setItem(22, getShopItem(item.getType(), price, sellPrice, item.getAmount() - 10));
 					} else {
-						inv.setItem(22, getShopItem(item.getType(), price, 1));
+						inv.setItem(22, getShopItem(item.getType(), price, sellPrice, 1));
 					}
 				} else if(event.getSlot() == 18) {
 					if(item.getAmount() > 32) {
-						inv.setItem(22, getShopItem(item.getType(), price, item.getAmount() - 32));
+						inv.setItem(22, getShopItem(item.getType(), price, sellPrice, item.getAmount() - 32));
 					} else {
-						inv.setItem(22, getShopItem(item.getType(), price, 1));
+						inv.setItem(22, getShopItem(item.getType(), price, sellPrice, 1));
 					}
 				}
 			}
@@ -413,9 +620,8 @@ public class Main extends JavaPlugin implements Listener {
 				player.closeInventory();
 			} else if(event.getSlot() == 39) {
 				if(player.getInventory().firstEmpty() != -1) {
-					EconomyResponse r = econ.withdrawPlayer(player, price * item.getAmount());
-					if(r.transactionSuccess()) {
-						player.getInventory().addItem(new ItemStack(item.getType(), item.getAmount()));
+					if(econ.withdrawPlayer(player, price * item.getAmount()) == 0) {
+						player.getInventory().addItem(new ItemStack(item.getType(), item.getAmount(), item.getData().getData()));
 						player.closeInventory();
 						player.sendMessage(ChatColor.GREEN + "You purchased " + item.getAmount() + " " + item.getType().toString());
 					} else {
@@ -425,6 +631,9 @@ public class Main extends JavaPlugin implements Listener {
 				} else {
 					player.sendMessage(ChatColor.RED + "You do not have enough space in your inventory.");
 				}
+			} else if (event.getSlot() == 49) {
+				player.closeInventory();
+				player.openInventory(getMultipleStackBuy(player, item));
 			}
 			ArrayList<String> lore = new ArrayList<>();
 			lore.add("Total Price: " + price * inv.getItem(22).getAmount());
@@ -432,7 +641,169 @@ public class Main extends JavaPlugin implements Listener {
 			meta.setLore(lore);
 			inv.getItem(39).setItemMeta(meta);
 		}
-		if(inv.getName() == "Shop Customizer") {
+		if(event.getView().getTitle() == "Sell Item") {
+			event.setCancelled(true);
+			ItemStack item = inv.getItem(22);
+			String[] buyTokens = item.getItemMeta().getLore().get(0).split(" ");
+			double price = Double.valueOf(buyTokens[2]);
+			String[] sellTokens = item.getItemMeta().getLore().get(1).split(" ");
+			double sellPrice = Double.valueOf(sellTokens[2]);
+			if(event.getSlot() == 24) {
+				inv.setItem(22, getShopItem(item.getType(), price, sellPrice, item.getAmount() + 1));
+			} else if(event.getSlot() == 25) {
+				inv.setItem(22, getShopItem(item.getType(), price, sellPrice, item.getAmount() + 10));
+			} else if(event.getSlot() == 26) {
+				inv.setItem(22, getShopItem(item.getType(), price, sellPrice, 64));
+			}
+			if(item.getAmount() > 1) {
+				if(event.getSlot() == 20) {
+					inv.setItem(22, getShopItem(item.getType(), price, sellPrice, item.getAmount() - 1));
+				} else if(event.getSlot() == 19) {
+					if(item.getAmount() > 10) {
+						inv.setItem(22, getShopItem(item.getType(), price, sellPrice, item.getAmount() - 10));
+					} else {
+						inv.setItem(22, getShopItem(item.getType(), price, sellPrice, 1));
+					}
+				} else if(event.getSlot() == 18) {
+					if(item.getAmount() > 32) {
+						inv.setItem(22, getShopItem(item.getType(), price, sellPrice, item.getAmount() - 32));
+					} else {
+						inv.setItem(22, getShopItem(item.getType(), price, sellPrice, 1));
+					}
+				}
+			}
+			if(event.getSlot() == 41) {
+				player.closeInventory();
+			} else if(event.getSlot() == 39) {
+				/*int itemAmount = 0;
+				for(ItemStack itemStack : player.getInventory().getContents()) {
+					if(itemStack.getType() == item.getType() && itemStack != null) {
+						itemAmount += itemStack.getAmount();
+					}
+				}*/
+				if(player.getInventory().containsAtLeast(new ItemStack(item.getType()), item.getAmount())) {
+					if(econ.depositPlayer(player, sellPrice * item.getAmount()) == 0) {
+						player.getInventory().removeItem(new ItemStack(item.getType(), item.getAmount(), item.getData().getData()));
+						player.closeInventory();
+						player.sendMessage(ChatColor.GREEN + "You sold " + item.getAmount() + " " + item.getType().toString());
+					}
+				} else {
+					player.sendMessage(ChatColor.RED + "You do not have enough items to sell.");
+				}
+			} else if (event.getSlot() == 49) {
+				player.closeInventory();
+				player.openInventory(getMultipleStackBuy(player, item));
+			}
+			ArrayList<String> lore = new ArrayList<>();
+			lore.add("Total Price: " + sellPrice * (double) inv.getItem(22).getAmount());
+			ItemMeta meta = inv.getItem(39).getItemMeta();
+			meta.setLore(lore);
+			inv.getItem(39).setItemMeta(meta);
+		}
+		if(event.getView().getTitle() == "Purchase Multiple Stacks") {
+			event.setCancelled(true);
+			ItemStack item = inv.getItem(4);
+			String[] loreTokens = item.getItemMeta().getLore().get(0).split(" ");
+			double price = Double.parseDouble(loreTokens[2]);
+			int emptySlots = 0;
+			for (ItemStack itemStacks : player.getInventory().getContents()) {
+				if(itemStacks == null) {
+					emptySlots++;
+				}
+			}
+			if(event.getSlot() == 10 && emptySlots >= 1) {
+				if(econ.withdrawPlayer(player, price * 64) == 0) {
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.closeInventory();
+					player.sendMessage(ChatColor.GREEN + "You purchased 64 " + item.getType().toString());
+				} else {
+					player.closeInventory();
+					player.sendMessage(ChatColor.RED + "You do not have enough money.");
+				}
+			} else if(event.getSlot() == 11 && emptySlots >= 2) {
+				if(econ.withdrawPlayer(player, price * 64 * 2) == 0) {
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.closeInventory();
+					player.sendMessage(ChatColor.GREEN + "You purchased 2 stacks of " + item.getType().toString());
+				} else {
+					player.closeInventory();
+					player.sendMessage(ChatColor.RED + "You do not have enough money.");
+				}
+			} else if(event.getSlot() == 12 && emptySlots >= 3) {
+				if(econ.withdrawPlayer(player, price * 64 * 3) == 0) {
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.closeInventory();
+					player.sendMessage(ChatColor.GREEN + "You purchased 3 stacks of " + item.getType().toString());
+				} else {
+					player.closeInventory();
+					player.sendMessage(ChatColor.RED + "You do not have enough money.");
+				}
+			} else if(event.getSlot() == 13 && emptySlots >= 4) {
+				if(econ.withdrawPlayer(player, price * 64 * 4) == 0) {
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.closeInventory();
+					player.sendMessage(ChatColor.GREEN + "You purchased 4 stacks of " + item.getType().toString());
+				} else {
+					player.closeInventory();
+					player.sendMessage(ChatColor.RED + "You do not have enough money.");
+				}
+			} else if(event.getSlot() == 14 && emptySlots >= 5) {
+				if(econ.withdrawPlayer(player, price * 64 * 5) == 0) {
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.closeInventory();
+					player.sendMessage(ChatColor.GREEN + "You purchased 5 stacks of " + item.getType().toString());
+				} else {
+					player.closeInventory();
+					player.sendMessage(ChatColor.RED + "You do not have enough money.");
+				}
+			} else if(event.getSlot() == 15 && emptySlots >= 6) {
+				if(econ.withdrawPlayer(player, price * 64 * 6) == 0) {
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.closeInventory();
+					player.sendMessage(ChatColor.GREEN + "You purchased 6 stacks of " + item.getType().toString());
+				} else {
+					player.closeInventory();
+					player.sendMessage(ChatColor.RED + "You do not have enough money.");
+				}
+			} else if(event.getSlot() == 16 && emptySlots >= 7) {
+				if(econ.withdrawPlayer(player, price * 64 * 7) == 0) {
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.getInventory().addItem(new ItemStack(item.getType(), 64));
+					player.closeInventory();
+					player.sendMessage(ChatColor.GREEN + "You purchased 7 stacks of " + item.getType().toString());
+				} else {
+					player.closeInventory();
+					player.sendMessage(ChatColor.RED + "You do not have enough money.");
+				}
+			} else if(event.getSlot() >= 10 && event.getSlot() <= 16) {
+				player.closeInventory();
+				player.sendMessage(ChatColor.RED + "You do not have enough space in your inventory.");
+			}
+			if(event.getSlot() == 22) {
+				player.closeInventory();
+			}
+		}
+		if(event.getView().getTitle() == "Shop Customizer") {
 			event.setCancelled(true);
 			if(event.getSlot() == 49) {
 				player.closeInventory();
@@ -454,8 +825,7 @@ public class Main extends JavaPlugin implements Listener {
 				if(skull.getOwner().equalsIgnoreCase("coin") && !data.getConfig().getStringList(player.getUniqueId().toString() + ".coins").contains(clickedBlock.getLocation().toString())) {
 					List<String> list = data.getConfig().getStringList(player.getUniqueId() + ".coins");
 					list.add(clickedBlock.getLocation().toString());
-					EconomyResponse r = econ.depositPlayer(player, 1);
-					if(r.transactionSuccess()) {
+					if(econ.depositPlayer(player, 1) == 0) {
 						player.sendMessage(ChatColor.GOLD + "+1 coin");
 					}
 					
@@ -474,7 +844,7 @@ public class Main extends JavaPlugin implements Listener {
 		if(tokens[0].equalsIgnoreCase("/bal") || event.getMessage().equalsIgnoreCase("/balance")) {
 			event.setCancelled(true);
 			Player player = (Player) event.getPlayer();
-			player.sendMessage(String.format("You have %s", econ.format(econ.getBalance(player))));
+			player.sendMessage(String.format("You have %s", econ.getBalance(player)));
 		} else if (tokens[0].equalsIgnoreCase("/help") && !event.getPlayer().hasPermission("nte.admin")) {
 			event.setCancelled(true);
 			Player player = (Player) event.getPlayer();
@@ -508,10 +878,8 @@ public class Main extends JavaPlugin implements Listener {
 				player.sendMessage(ChatColor.RED + "You do not have enough coins.");
 				return;
 			}
-			EconomyResponse r1 = econ.withdrawPlayer(player, Double.parseDouble(tokens[2]));
-			if(r1.transactionSuccess()) {
-				EconomyResponse r2 = econ.depositPlayer(Bukkit.getPlayer(tokens[1]), Double.parseDouble(tokens[2]));
-				if(r2.transactionSuccess()) {
+			if(econ.withdrawPlayer(player, Double.parseDouble(tokens[2])) == 0) {
+				if(econ.depositPlayer(Bukkit.getPlayer(tokens[1]), Double.parseDouble(tokens[2])) == 0) {
 					player.sendMessage(ChatColor.GREEN + "You have given "+tokens[1]+" "+tokens[2]+" dollars");
 				}
 			}

@@ -2,7 +2,7 @@ main: ml.chriscommunity.survivalplus.main.Main
 name: "SurvivalPlus"
 author: GhostlyGames41
 version: 1.0
-depend: [Vault]
+depend: [EconomyPlus]
 
 commands:
    coin:
