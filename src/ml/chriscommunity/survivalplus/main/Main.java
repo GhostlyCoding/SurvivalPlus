@@ -57,10 +57,10 @@ public class Main extends JavaPlugin implements Listener {
 		if(getServer().getPluginManager().getPlugin("EconomyPlus") == null) {
 			return false;
 		}
+		econ = new Economy();
 		if (econ.initEcon() != 0) {
 			return false;
 		}
-		econ = new Economy();
 		return econ != null;
 	}
 
