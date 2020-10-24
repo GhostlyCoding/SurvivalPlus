@@ -23,6 +23,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -808,6 +809,11 @@ public class Main extends JavaPlugin implements Listener {
 				player.closeInventory();
 			}
 		}
+	}
+	
+	@EventHandler
+	void onJoin(PlayerJoinEvent event) {
+		
 	}
 
 	@EventHandler
