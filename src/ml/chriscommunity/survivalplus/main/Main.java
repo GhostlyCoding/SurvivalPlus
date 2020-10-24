@@ -810,11 +810,6 @@ public class Main extends JavaPlugin implements Listener {
 			}
 		}
 	}
-	
-	@EventHandler
-	void onJoin(PlayerJoinEvent event) {
-		
-	}
 
 	@EventHandler
 	void onCoinClick(PlayerInteractEvent event) {
