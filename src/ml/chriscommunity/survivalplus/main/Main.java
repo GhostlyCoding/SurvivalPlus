@@ -161,6 +161,9 @@ public class Main extends JavaPlugin implements Listener {
 				}
 			}
 		}
+		if(label.equalsIgnoreCase("/bal") || label.equalsIgnoreCase("/balance")) {
+			player.sendMessage(String.format("You have %s", econ.getBalance(player)));
+		}
 		return false;
 	}
 	
@@ -841,11 +844,7 @@ public class Main extends JavaPlugin implements Listener {
 	@EventHandler
 	void onCommandPreprocess (PlayerCommandPreprocessEvent event) {
 		String[] tokens = event.getMessage().split(" ");
-		if(tokens[0].equalsIgnoreCase("/bal") || event.getMessage().equalsIgnoreCase("/balance")) {
-			event.setCancelled(true);
-			Player player = (Player) event.getPlayer();
-			player.sendMessage(String.format("You have %s", econ.getBalance(player)));
-		} else if (tokens[0].equalsIgnoreCase("/help") && !event.getPlayer().hasPermission("nte.admin")) {
+		if (tokens[0].equalsIgnoreCase("/help") && !event.getPlayer().hasPermission("nte.admin")) {
 			event.setCancelled(true);
 			Player player = (Player) event.getPlayer();
 			player.sendMessage(ChatColor.RED + "You cannot run this command.");
