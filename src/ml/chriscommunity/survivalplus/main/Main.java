@@ -1,12 +1,12 @@
 package ml.chriscommunity.survivalplus.main;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-import org.apache.commons.codec.binary.Base64;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -26,7 +26,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.mojang.authlib.GameProfile;
@@ -530,7 +529,7 @@ public class Main extends JavaPlugin implements Listener {
 		if (propertyMap == null) {
 			throw new IllegalStateException("Profile doesn't contain a property map");
 		}
-		byte[] encodedData = Base64.encodeBase64(String.format("{textures:{SKIN:{url:\"%s\"}}}", url).getBytes());
+		byte[] encodedData = Base64.getEncoder().encode(String.format("{textures:{SKIN:{url:\"%s\"}}}", url).getBytes());
 		propertyMap.put("textures", new Property("textures", new String(encodedData)));
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		ItemMeta headMeta = head.getItemMeta();
