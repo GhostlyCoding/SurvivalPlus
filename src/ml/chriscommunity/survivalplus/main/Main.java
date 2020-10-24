@@ -254,7 +254,7 @@ public class Main extends JavaPlugin implements Listener {
 			inv.setItem(49, back);
 			// Line 1	slot			item id					price
 			inv.setItem(10, getShopItem(Material.DIRT, 			1, 0.5f, 1));
-			inv.setItem(11, getShopItem(Material.GRASS, 		1, 0.75f, 1));
+			inv.setItem(11, getShopItem(Material.GRASS_BLOCK,	1, 0.75f, 1));
 			inv.setItem(12, getShopItem(Material.STONE, 		2, 1, 1));
 			inv.setItem(13, getShopItem(Material.COBBLESTONE, 	1, 0.75f, 1));
 			inv.setItem(14, getShopItem(Material.STONE_BRICKS, 	8, 4, 1));
