@@ -2,6 +2,7 @@ main: ml.chriscommunity.survivalplus.main.Main
 name: "SurvivalPlus"
 author: GhostlyGames41
 version: 1.0
+api-version: 1.15
 depend: [EconomyPlus]
 
 commands:
