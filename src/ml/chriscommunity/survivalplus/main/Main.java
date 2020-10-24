@@ -163,6 +163,7 @@ public class Main extends JavaPlugin implements Listener {
 		}
 		if(label.equalsIgnoreCase("/bal") || label.equalsIgnoreCase("/balance")) {
 			player.sendMessage(String.format("You have %s", econ.getBalance(player)));
+			return true;
 		}
 		return false;
 	}

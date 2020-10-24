@@ -12,8 +12,9 @@ commands:
       usage: /<command>
    shop:
       usage: /<command>
-   bal:
+   balance:
       usage: /<command>
+      aliases: [bal]
    customize:
    survivalplus:
       aliases: [sp]
