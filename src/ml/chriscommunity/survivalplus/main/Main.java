@@ -220,7 +220,7 @@ public class Main extends JavaPlugin implements Listener {
 		Inventory inv = null;
 		if(tab == 0) {
 			inv = Bukkit.createInventory(player, 27, "Shop");
-			ItemStack building = new ItemStack(Material.GRASS);
+			ItemStack building = new ItemStack(Material.GRASS_BLOCK);
 			ItemMeta meta = building.getItemMeta();
 			meta.setDisplayName(ChatColor.RESET + "Building");
 			building.setItemMeta(meta);
