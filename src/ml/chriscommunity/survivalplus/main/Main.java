@@ -592,6 +592,9 @@ public class Main extends JavaPlugin implements Listener {
 			} else if(event.getSlot() == 13) {
 				player.closeInventory();
 				player.openInventory(getShop(player, 2));
+			} else if(event.getSlot() == 14) {
+				player.closeInventory();
+				player.openInventory(getShop(player, 3));
 			}
 		}
 		if(event.getView().getTitle() == "Building") {
