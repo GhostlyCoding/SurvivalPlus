@@ -894,7 +894,7 @@ public class Main extends JavaPlugin implements Listener {
 			ItemMeta meta = item.getItemMeta();
 			String[] tokens = meta.getDisplayName().split(" ");
 			CreatureSpawner spawner = (CreatureSpawner) event.getBlockPlaced();
-			spawner.setCreatureTypeByName(tokens[0]);
+			spawner.setCreatureTypeByName(tokens[0].toLowerCase());
 		}
 	}
 	
