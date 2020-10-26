@@ -664,7 +664,11 @@ public class Main extends JavaPlugin implements Listener {
 			} else if(event.getSlot() == 39) {
 				if(player.getInventory().firstEmpty() != -1) {
 					if(econ.withdrawPlayer(player, price * item.getAmount()) == 0) {
-						player.getInventory().addItem(new ItemStack(item.getType(), item.getAmount(), item.getData().getData()));
+						ItemStack buyItem = new ItemStack(item.getType(), item.getAmount());
+						ItemMeta meta = buyItem.getItemMeta();
+						meta.setDisplayName(item.getItemMeta().getDisplayName());
+						buyItem.setItemMeta(meta);
+						player.getInventory().addItem(buyItem);
 						player.closeInventory();
 						player.sendMessage(ChatColor.GREEN + "You purchased " + item.getAmount() + " " + item.getType().toString());
 					} else {
