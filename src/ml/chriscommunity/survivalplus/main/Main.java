@@ -322,6 +322,30 @@ public class Main extends JavaPlugin implements Listener {
 			meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&c&lBack"));
 			back.setItemMeta(meta);
 			inv.setItem(49, back);
+		} else if(tab == 3) {
+			inv = Bukkit.createInventory(player, 54, "Ores/Metals");
+			ItemStack border = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+			ItemMeta meta = border.getItemMeta();
+			meta = border.getItemMeta();
+			meta.setDisplayName(" ");
+			border.setItemMeta(meta);
+			for(int i = 0; i < 54; i++) {
+				if(i < 9 || i % 9 == 0 || i % 9 == 8 || i > 43) {
+					inv.setItem(i, border);
+				}
+			}
+			
+			inv.setItem(11, getSpawnerItem(Material.SPAWNER, 100.0f, 25.0f, "Pig"));
+			inv.setItem(12, getSpawnerItem(Material.SPAWNER, 105.0f, 25.0f, "Cow"));
+			inv.setItem(13, getSpawnerItem(Material.SPAWNER, 105.0f, 25.0f, "Chicken"));
+			inv.setItem(14, getSpawnerItem(Material.SPAWNER, 120.0f, 25.0f, "Zombie"));
+			inv.setItem(15, getSpawnerItem(Material.SPAWNER, 130.0f, 25.0f, "Skeleton"));
+			
+			ItemStack back = new ItemStack(Material.BARRIER);
+			meta = back.getItemMeta();
+			meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&c&lBack"));
+			back.setItemMeta(meta);
+			inv.setItem(49, back);
 		}
 		return inv;
 	}
@@ -519,6 +543,18 @@ public class Main extends JavaPlugin implements Listener {
 		lore.add("Buy Price: " + price + " coins");
 		lore.add("Sell Price: " + sellPrice + " coins");
 		meta.setLore(lore);
+		item.setItemMeta(meta);
+		
+		return item;
+	}
+	ItemStack getSpawnerItem(Material material, double price, double sellPrice, String entityName) {
+		ItemStack item = new ItemStack(material);
+		ItemMeta meta = item.getItemMeta();
+		ArrayList<String> lore = new ArrayList<>();
+		lore.add("Buy Price: " + price + " coins");
+		lore.add("Sell Price: " + sellPrice + " coins");
+		meta.setLore(lore);
+		meta.setDisplayName(entityName + " Spawner");
 		item.setItemMeta(meta);
 		
 		return item;
