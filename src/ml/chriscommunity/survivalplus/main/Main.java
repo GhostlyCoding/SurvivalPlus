@@ -60,7 +60,7 @@ public class Main extends JavaPlugin implements Listener {
 			return false;
 		}
 		econ = new Economy();
-		if (econ.initEcon() != 0) {
+		if (econ.initEcon("economy") != 0) {
 			return false;
 		}
 		return econ != null;
