@@ -80,7 +80,7 @@
     	<dependency>
 	    	<groupId>com.github.GhostlyCoding</groupId>
 	    	<artifactId>EconomyPlus</artifactId>
-	    	<version>a8bf4bd</version>
+	    	<version>9c67c46</version>
 		</dependency>
     	
 	</dependencies>
