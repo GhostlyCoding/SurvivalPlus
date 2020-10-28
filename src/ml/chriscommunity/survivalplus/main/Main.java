@@ -60,9 +60,11 @@ public class Main extends JavaPlugin implements Listener {
 			return false;
 		}
 		econ = new Economy();
-		if (econ.initEcon("economy") != 0) {
+		if (econ.initEcon("test") != 0) {
+			Bukkit.getLogger().info("Database not connected");
 			return false;
 		}
+		Bukkit.getLogger().info("Database connected");
 		return econ != null;
 	}
 
